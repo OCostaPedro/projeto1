@@ -1,1 +1,0 @@
-﻿Resumo das comparacoes
