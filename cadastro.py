@@ -1,66 +1,104 @@
+from utils import limpar_tela, pausar
 import os
 
-def menu():
-    print("\nMenu de Opções:")
-    print("1. Inserir nome")
-    print("2. Mostrar nomes")
-    print("3. Atualizar nome")
-    print("4. Deletar nome")
-    print("5. Sair")
-    return int(input("Digite a opção desejada: "))
+def carregar_usuarios():
+    usuarios = []
+    
+    if not os.path.exists("usuarios.txt"):
+        return usuarios
+    
+    with open("usuarios.txt", "r", encoding="utf-8") as arquivo:
+        for linha in arquivo:
+            if linha.strip():
+                partes = linha.strip().split("|")
+                # Compatibilidade com formato antigo (5 campos) e novo (6 campos)
+                if len(partes) == 5:
+                    usuario = {
+                        "nome": partes[0],
+                        "email": partes[1],
+                        "senha": partes[2],
+                        "minutos": int(partes[3]),
+                        "pontuacao": int(partes[4]),
+                        "pontos_acumulados": 0  # Campo novo para compatibilidade
+                    }
+                    usuarios.append(usuario)
+                elif len(partes) == 6:
+                    usuario = {
+                        "nome": partes[0],
+                        "email": partes[1],
+                        "senha": partes[2],
+                        "minutos": int(partes[3]),
+                        "pontuacao": int(partes[4]),
+                        "pontos_acumulados": int(partes[5])
+                    }
+                    usuarios.append(usuario)
+    
+    return usuarios
 
-def inserir(pessoas, proximo_id):
-    nome = input("Digite o nome que deseja inserir: ")
-    pessoas[proximo_id] = nome
-    print(f"Nome adicionado com ID: {proximo_id}")
-    return proximo_id + 1
 
-def mostrar(pessoas):
-    if pessoas:
-        print("Mostrar de nomes:")
-        for id_, nome in pessoas.items():
-            print(f"ID {id_}: {nome}")
-    else:
-        print("Nenhum nome cadastrado.")
+def salvar_usuario(usuario):
+    with open("usuarios.txt", "a", encoding="utf-8") as arquivo:
+        linha = f"{usuario['nome']}|{usuario['email']}|{usuario['senha']}|{usuario['minutos']}|{usuario['pontuacao']}|{usuario['pontos_acumulados']}\n"
+        arquivo.write(linha)
 
-def atualizar(pessoas):
-    id_pessoa = int(input("Digite o ID do nome que deseja atualizar: "))
-    if id_pessoa in pessoas:
-        novo_nome = input("Digite o novo nome: ")
-        pessoas[id_pessoa] = novo_nome
-        print("Nome atualizado com sucesso!")
-    else:
-        print("ID inválido.")
 
-def deletar(pessoas):
-    id_pessoa = int(input("Digite o ID do nome que deseja deletar: "))
-    if id_pessoa in pessoas:
-        del pessoas[id_pessoa]
-        print("Nome deletado com sucesso!")
-    else:
-        print("ID inválido.")
+def atualizar_usuarios(usuarios):
+    with open("usuarios.txt", "w", encoding="utf-8") as arquivo:
+        for usuario in usuarios:
+            linha = f"{usuario['nome']}|{usuario['email']}|{usuario['senha']}|{usuario['minutos']}|{usuario['pontuacao']}|{usuario['pontos_acumulados']}\n"
+            arquivo.write(linha)
 
-def main():
-    os.system("cls" if os.name == "nt" else "clear")
-    pessoas = {}
-    proximo_id = 1
 
-    while True:
-        opcao = menu()
+def cadastrar_usuario():
+    limpar_tela()
+    print("●" * 50)
+    print("  CADASTRO DE USUÁRIO")
+    print("●" * 50)
+    
+    nome = input("\nDigite seu nome: ").strip()
+    email = input("Digite seu email: ").strip()
+    senha = input("Digite uma senha: ").strip()
+    
+    usuarios = carregar_usuarios()
+    
+    for usuario in usuarios:
+        if usuario["email"] == email:
+            print("\nEste email já está cadastrado!")
+            pausar()
+            return None
+    
+    novo_usuario = {
+        "nome": nome,
+        "email": email,
+        "senha": senha,
+        "minutos": 0,
+        "pontuacao": 0,
+        "pontos_acumulados": 0
+    }
+    
+    salvar_usuario(novo_usuario)
+    print(f"\nCadastro realizado com sucesso! Bem-vindo(a), {nome}!")
+    pausar()
+    return novo_usuario
 
-        if opcao == 1:
-            proximo_id = inserir(pessoas, proximo_id)
-        elif opcao == 2:
-            mostrar(pessoas)
-        elif opcao == 3:
-            atualizar(pessoas)
-        elif opcao == 4:
-            deletar(pessoas)
-        elif opcao == 5:
-            print("Fim.")
-            break
-        else:
-            print("Opção inválida.")
 
-if __name__ == "__main__":
-    main()
+def fazer_login():
+    limpar_tela()
+    print("●" * 50)
+    print("  LOGIN")
+    print("●" * 50)
+    
+    email = input("\nDigite seu email: ").strip()
+    senha = input("Digite sua senha: ").strip()
+    
+    usuarios = carregar_usuarios()
+    
+    for usuario in usuarios:
+        if usuario["email"] == email and usuario["senha"] == senha:
+            print(f"\nLogin realizado! Bem-vindo(a) de volta, {usuario['nome']}!")
+            pausar()
+            return usuario
+    
+    print("\nEmail ou senha incorretos!")
+    pausar()
+    return None
